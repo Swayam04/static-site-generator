@@ -1,4 +1,4 @@
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict
 
 class HTMLNode:
     def __init__(self,
@@ -32,6 +32,18 @@ class HTMLNode:
         if self.props:
             parts.append(f"props={len(self.props)} items")
         return f"HTMLNode({', '.join(parts)})"
+    
+    def open_tag(self):
+        if not self.tag:
+            if self.props:
+                raise ValueError("Props cannot exist without a tag.")
+            return ""
+        return f"<{self.tag}{self.props_to_html()}>"
+    
+    def close_tag(self):
+        if not self.tag:
+            return ""
+        return f"</{self.tag}>"
 
     def __to_string(self, indent_level: int = 0) -> str:
         indent = '   ' * indent_level

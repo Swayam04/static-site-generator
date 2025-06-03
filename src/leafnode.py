@@ -1,5 +1,6 @@
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 from htmlnode import HTMLNode
+from textnode import TextNode, TextType
 
 class LeafNode(HTMLNode):
     
@@ -13,7 +14,30 @@ class LeafNode(HTMLNode):
     def to_html(self):
         if not self.value:
             raise ValueError('Value attribute mandatory for leaf nodes')
-        if not self.tag:
-            return self.value
-        return f"<{self.tag}{self.props_to_html()}>{self.value}</{self.tag}>"
+        return f"{self.open_tag()}{self.value}{self.close_tag()}"
+
+
+ 
+def text_node_to_html_node(text_node : TextNode) -> HTMLNode:
+    
+    if text_node.text_type == TextType.TEXT:
+        return LeafNode(None, text_node.text)
+    elif text_node.text_type == TextType.BOLD:
+        return LeafNode("b", text_node.text)
+    elif text_node.text_type == TextType.ITALIC:
+        return LeafNode("i", text_node.text)
+    elif text_node.text_type == TextType.CODE:
+        return LeafNode("code", text_node.text)
+    elif text_node.text_type == TextType.LINK:
+        if text_node.url:
+            return LeafNode("a", text_node.text, {"href":text_node.url})
+        else:
+            raise ValueError("URL mandatory for links")
+    elif text_node.text_type == TextType.IMAGE:
+        if text_node.url:
+            return LeafNode("img", "", {"src":text_node.url, "alt":text_node.text})
+        else:
+            raise ValueError("Source URL mandatory for Image tags")
+    else:
+        raise ValueError("Unknown TextNode type")
     
