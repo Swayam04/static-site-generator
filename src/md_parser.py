@@ -1,5 +1,6 @@
-from typing import List
+from typing import List, Tuple
 from textnode import TextNode, TextType
+import re
 
 def split_nodes_delimiter(old_nodes : List[TextNode], delimiter : str, text_type : TextType) -> List[TextNode]:
     new_nodes = []
@@ -47,3 +48,11 @@ def split_nodes_delimiter(old_nodes : List[TextNode], delimiter : str, text_type
             raise ValueError(f"Invalid Markdown: Unclosed delimiter '{delimiter}' in text: {old_node.text}")
 
     return new_nodes
+
+def extract_markdown_images(text : str) -> List[Tuple[str, str]]:
+    matches = re.findall(r"!\[(.*?)\]\((.*?)\)", text)
+    return matches
+
+def extract_markdown_links(text : str) -> List[Tuple[str, str]]:
+    matches = re.findall(r"(?<!!)\[(.*?)\]\((.*?)\)", text)
+    return matches

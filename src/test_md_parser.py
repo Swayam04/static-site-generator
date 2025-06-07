@@ -1,4 +1,4 @@
-from md_parser import split_nodes_delimiter
+from md_parser import *
 import unittest
 from textnode import TextNode, TextType
 
@@ -130,3 +130,34 @@ class MDParserTest(unittest.TestCase):
         expected_nodes = []
         new_nodes = split_nodes_delimiter(old_nodes, delimiter, text_type)
         self.assertEqual(new_nodes, expected_nodes)
+        
+    def test_sinle_link(self):
+        text = 'Visit my [website](https://www.example.com)'
+        res = extract_markdown_links(text)
+        self.assertListEqual([('website', 'https://www.example.com')], res)
+    
+    def test_single_image(self):
+        text = 'Visit my ![image](/path/to/my/image.jpg)'
+        res = extract_markdown_images(text)
+        self.assertListEqual([('image', '/path/to/my/image.jpg')], res)
+    
+    def test_multiple_links(self):
+        text2 = "See [Page One](/page1.html) or [Google](http://google.com)."
+        res = extract_markdown_links(text2)
+        self.assertListEqual([('Page One', '/page1.html'), ('Google', 'http://google.com')], res)
+        
+    def test_multiple_images(self):
+        text2 = "See ![Image](/photo.jpg) or ![WebImage](http://imgur.com/lotr.jpg)."
+        res = extract_markdown_images(text2)
+        self.assertListEqual([('Image', '/photo.jpg'), ('WebImage', 'http://imgur.com/lotr.jpg')], res)
+    
+    def test_no_match_link(self):
+        text = 'Visit my ![image](/path/to/my/image.jpg)'
+        res = extract_markdown_links(text)
+        self.assertListEqual([], res)
+    
+    def test_no_match_image(self):
+        text = 'Visit my [website](https://www.example.com)'
+        res = extract_markdown_images(text)
+        self.assertListEqual([], res)
+        
