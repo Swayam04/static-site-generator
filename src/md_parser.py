@@ -2,6 +2,30 @@ from typing import List, Tuple
 from textnode import TextNode, TextType
 import re
 
+pattern_map = {
+    TextType.IMAGE : r"!\[(?P<alt>.*?)\]\((?P<url>.*?)\)", 
+    TextType.LINK : r"(?<!!)\[(?P<alt>.*?)\]\((?P<url>.*?)\)"
+}
+
+def markdown_to_blocks(markdown : str) -> List[str]:
+    res = [s.strip() for s in markdown.split("\n\n") if s.strip()]
+    return res
+
+def text_to_textnodes(text: str) -> List[TextNode]:
+    nodes = [TextNode(text, TextType.TEXT)]
+    processors = [
+        (split_nodes_delimiter, ('**', TextType.BOLD)),
+        (split_nodes_delimiter, ('_', TextType.ITALIC)),
+        (split_nodes_delimiter, ('`', TextType.CODE)),
+        (split_nodes_image, ()),
+        (split_nodes_link, ()),
+    ]
+
+    for processor, args in processors:
+        nodes = processor(nodes, *args)
+
+    return nodes
+
 def split_nodes_delimiter(old_nodes : List[TextNode], delimiter : str, text_type : TextType) -> List[TextNode]:
     new_nodes = []
     delimiter_len = len(delimiter)
@@ -49,10 +73,39 @@ def split_nodes_delimiter(old_nodes : List[TextNode], delimiter : str, text_type
 
     return new_nodes
 
+def split_nodes_image(old_nodes : List[TextNode]) -> List[TextNode]:
+    return split_link_types(old_nodes, TextType.IMAGE)
+
+def split_nodes_link(old_nodes : List[TextNode]) -> List[TextNode]:
+    return split_link_types(old_nodes, TextType.LINK)
+
+def split_link_types(old_nodes: List[TextNode], link_type: TextType) -> List[TextNode]:
+    new_nodes: List[TextNode] = []
+    regex = re.compile(pattern_map[link_type])
+    
+    for old_node in old_nodes:
+        if old_node.text_type != TextType.TEXT:
+            new_nodes.append(old_node)
+            continue
+
+        text = old_node.text
+
+        last_index = 0
+        for match in regex.finditer(text):
+            if match.start() > last_index:
+                new_nodes.append(TextNode(text[last_index:match.start()], TextType.TEXT))
+            new_nodes.append(TextNode(match.group('alt'), link_type, match.group('url')))
+            last_index = match.end()
+
+        if last_index < len(text):
+            new_nodes.append(TextNode(text[last_index:], TextType.TEXT))
+    
+    return new_nodes
+
 def extract_markdown_images(text : str) -> List[Tuple[str, str]]:
-    matches = re.findall(r"!\[(.*?)\]\((.*?)\)", text)
+    matches = re.findall(pattern_map[TextType.IMAGE], text)
     return matches
 
 def extract_markdown_links(text : str) -> List[Tuple[str, str]]:
-    matches = re.findall(r"(?<!!)\[(.*?)\]\((.*?)\)", text)
+    matches = re.findall(pattern_map[TextType.LINK], text)
     return matches

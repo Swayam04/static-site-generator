@@ -160,4 +160,224 @@ class MDParserTest(unittest.TestCase):
         text = 'Visit my [website](https://www.example.com)'
         res = extract_markdown_images(text)
         self.assertListEqual([], res)
+    
+    def test_split_images(self):
+        node = TextNode(
+            "This is text with an ![image](https://i.imgur.com/zjjcJKZ.png) and another ![second image](https://i.imgur.com/3elNhQu.png)",
+            TextType.TEXT,
+        )
+        new_nodes = split_nodes_image([node])
+        self.assertListEqual(
+            [
+                TextNode("This is text with an ", TextType.TEXT),
+                TextNode("image", TextType.IMAGE, "https://i.imgur.com/zjjcJKZ.png"),
+                TextNode(" and another ", TextType.TEXT),
+                TextNode(
+                    "second image", TextType.IMAGE, "https://i.imgur.com/3elNhQu.png"
+                ),
+            ],
+            new_nodes,
+        )
         
+    def test_split_links(self):
+        node = TextNode(
+            "This is text with a [link](https://www.google.com) and another [second link](https://www.reddit.com)",
+            TextType.TEXT,
+        )
+        new_nodes = split_nodes_link([node])
+        self.assertListEqual(
+            [
+                TextNode("This is text with a ", TextType.TEXT),
+                TextNode("link", TextType.LINK, "https://www.google.com"),
+                TextNode(" and another ", TextType.TEXT),
+                TextNode(
+                    "second link", TextType.LINK, "https://www.reddit.com"
+                ),
+            ],
+            new_nodes,
+        )
+    
+    def test_split_image_starts_and_ends(self):
+        node = TextNode("![Start](a.png)Middle![End](b.jpg)", TextType.TEXT)
+        new_nodes = split_nodes_image([node])
+        self.assertListEqual(
+            [
+                TextNode("Start", TextType.IMAGE, "a.png"),
+                TextNode("Middle", TextType.TEXT),
+                TextNode("End", TextType.IMAGE, "b.jpg"),
+            ],
+            new_nodes,
+        )
+
+    def test_split_link_empty_content(self):
+        node = TextNode("Before [](https://empty.com) After", TextType.TEXT)
+        new_nodes = split_nodes_link([node])
+        self.assertListEqual(
+            [
+                TextNode("Before ", TextType.TEXT),
+                TextNode("", TextType.LINK, "https://empty.com"),
+                TextNode(" After", TextType.TEXT),
+            ],
+            new_nodes,
+        )
+
+    def test_split_image_no_matches(self):
+        node = TextNode("This has no image syntax.", TextType.TEXT)
+        new_nodes = split_nodes_image([node])
+        self.assertListEqual(
+            [TextNode("This has no image syntax.", TextType.TEXT)],
+            new_nodes,
+        )
+
+    def test_split_link_malformed_no_paren(self):
+        node = TextNode("A link [text] without a url", TextType.TEXT)
+        new_nodes = split_nodes_link([node])
+        self.assertListEqual(
+            [TextNode("A link [text] without a url", TextType.TEXT)],
+            new_nodes,
+        )
+    
+    def test_text_to_text_nodes(self):
+        text = "This is **text** with an _italic_ word and a `code block` and an ![obi wan image](https://i.imgur.com/fJRm4Vk.jpeg) and a [link](https://boot.dev)"
+        new_nodes = text_to_textnodes(text)
+        self.assertListEqual(
+            [
+                TextNode("This is ", TextType.TEXT),
+                TextNode("text", TextType.BOLD),
+                TextNode(" with an ", TextType.TEXT),
+                TextNode("italic", TextType.ITALIC),
+                TextNode(" word and a ", TextType.TEXT),
+                TextNode("code block", TextType.CODE),
+                TextNode(" and an ", TextType.TEXT),
+                TextNode("obi wan image", TextType.IMAGE, "https://i.imgur.com/fJRm4Vk.jpeg"),
+                TextNode(" and a ", TextType.TEXT),
+                TextNode("link", TextType.LINK, "https://boot.dev"),
+            ],
+            new_nodes
+        )
+    
+    def test_markdown_to_blocks(self):
+        md = """
+This is **bolded** paragraph
+
+This is another paragraph with _italic_ text and `code` here
+This is the same paragraph on a new line
+
+- This is a list
+- with items
+"""
+        blocks = markdown_to_blocks(md)
+        self.assertEqual(
+            blocks,
+            [
+                "This is **bolded** paragraph",
+                "This is another paragraph with _italic_ text and `code` here\nThis is the same paragraph on a new line",
+                "- This is a list\n- with items",
+            ],
+        )
+    
+    def test_markdown_to_blocks_multiple_blanks(self):
+        md = """Block one.
+
+
+Block two.
+
+
+
+Block three."""
+        blocks = markdown_to_blocks(md)
+        self.assertEqual(
+            blocks,
+            [
+                "Block one.",
+                "Block two.",
+                "Block three."
+            ],
+        )
+
+    def test_markdown_to_blocks_leading_blanks(self):
+        md = """
+
+First block.
+Second line of first block.
+
+Third block."""
+        blocks = markdown_to_blocks(md)
+        self.assertEqual(
+            blocks,
+            [
+                "First block.\nSecond line of first block.",
+                "Third block."
+            ],
+        )
+
+    def test_markdown_to_blocks_trailing_blanks(self):
+        md = """First block.
+Second line.
+
+Last block.
+
+"""
+        blocks = markdown_to_blocks(md)
+        self.assertEqual(
+            blocks,
+            [
+                "First block.\nSecond line.",
+                "Last block."
+            ],
+        )
+
+    def test_markdown_to_blocks_all_blanks(self):
+        md = """
+
+Block A.
+
+
+Block B.
+
+
+"""
+        blocks = markdown_to_blocks(md)
+        self.assertEqual(
+            blocks,
+            [
+                "Block A.",
+                "Block B."
+            ],
+        )
+
+    def test_markdown_to_blocks_single_line(self):
+        md = """Line one.
+
+Line two.
+
+Line three."""
+        blocks = markdown_to_blocks(md)
+        self.assertEqual(
+            blocks,
+            [
+                "Line one.",
+                "Line two.",
+                "Line three."
+            ],
+        )
+
+    def test_markdown_to_blocks_empty_string(self):
+        md = ""
+        blocks = markdown_to_blocks(md)
+        self.assertEqual(
+            blocks,
+            []
+        )
+
+    def test_markdown_to_blocks_only_blanks(self):
+        md = """
+
+   
+
+        """
+        blocks = markdown_to_blocks(md)
+        self.assertEqual(
+            blocks,
+            []
+        )
