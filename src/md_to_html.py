@@ -59,12 +59,12 @@ def get_quotes_children(quotes : str) -> List[HTMLNode]:
     return text_to_html_nodes(full_content)
 
 def get_unordered_list_children(u_list : str) -> List[ParentNode]:
-    return _get_list_item_children(u_list, BlockType.unordered_list)
+    return get_list_item_children(u_list, BlockType.unordered_list)
 
 def get_ordered_list_children(o_list : str) -> List[ParentNode]:
-    return _get_list_item_children(o_list, BlockType.ordered_list)
+    return get_list_item_children(o_list, BlockType.ordered_list)
 
-def _get_list_item_children(list_block: str, list_type: BlockType) -> List[ParentNode]:
+def get_list_item_children(list_block: str, list_type: BlockType) -> List[ParentNode]:
     lines = list_block.split("\n")
     html_nodes: List[ParentNode] = []
     
