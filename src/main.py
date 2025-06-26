@@ -1,11 +1,7 @@
-from textnode import *
+from dir_utils import copy_to_destination
 
 def main():
-    dummy_text = 'Gandalf the Gray'
-    dummy_type = TextType.TEXT
-    dummy_url = 'https://www.middleearth.com'
-    dummy_node = TextNode(dummy_text, dummy_type, dummy_url)
-    print(dummy_node)
+    copy_to_destination("static", "public")
 
 if __name__ == '__main__':
     main()
