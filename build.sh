@@ -1,1 +1,1 @@
-python3 src/main.py -d "/Swayam04/static-site-generator/docs"
+python3 src/main.py -d "/static-site-generator/docs"
