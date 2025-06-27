@@ -1,0 +1,1 @@
+python3 src/main.py -d "/Swayam04/static-site-generator/"
