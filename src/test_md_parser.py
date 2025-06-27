@@ -130,36 +130,6 @@ class MDParserTest(unittest.TestCase):
         expected_nodes = []
         new_nodes = split_nodes_delimiter(old_nodes, delimiter, text_type)
         self.assertEqual(new_nodes, expected_nodes)
-        
-    def test_sinle_link(self):
-        text = 'Visit my [website](https://www.example.com)'
-        res = extract_markdown_links(text)
-        self.assertListEqual([('website', 'https://www.example.com')], res)
-    
-    def test_single_image(self):
-        text = 'Visit my ![image](/path/to/my/image.jpg)'
-        res = extract_markdown_images(text)
-        self.assertListEqual([('image', '/path/to/my/image.jpg')], res)
-    
-    def test_multiple_links(self):
-        text2 = "See [Page One](/page1.html) or [Google](http://google.com)."
-        res = extract_markdown_links(text2)
-        self.assertListEqual([('Page One', '/page1.html'), ('Google', 'http://google.com')], res)
-        
-    def test_multiple_images(self):
-        text2 = "See ![Image](/photo.jpg) or ![WebImage](http://imgur.com/lotr.jpg)."
-        res = extract_markdown_images(text2)
-        self.assertListEqual([('Image', '/photo.jpg'), ('WebImage', 'http://imgur.com/lotr.jpg')], res)
-    
-    def test_no_match_link(self):
-        text = 'Visit my ![image](/path/to/my/image.jpg)'
-        res = extract_markdown_links(text)
-        self.assertListEqual([], res)
-    
-    def test_no_match_image(self):
-        text = 'Visit my [website](https://www.example.com)'
-        res = extract_markdown_images(text)
-        self.assertListEqual([], res)
     
     def test_split_images(self):
         node = TextNode(
@@ -381,3 +351,56 @@ Line three."""
             blocks,
             []
         )
+
+    def test_simple_h1_title(self):
+        """Tests a basic case with one H1 title."""
+        markdown = """
+                    # This is the Title
+
+                    This is some paragraph text.
+                    """
+        self.assertEqual(extract_title(markdown), "This is the Title")
+
+    def test_finds_first_h1_only(self):
+        """Tests that the function returns only the first H1 if multiple exist."""
+        markdown = """
+                    # The Real Title
+
+                    Some content.
+
+                    ## A Subheading
+
+                    More content.
+
+                    # Another H1 That Should Be Ignored
+                    """
+        self.assertEqual(extract_title(markdown), "The Real Title")
+
+    def test_handles_variable_whitespace(self):
+        """Tests that it correctly strips the prefix with multiple spaces."""
+        markdown = "#   A Title with extra spaces"
+        self.assertEqual(extract_title(markdown), "A Title with extra spaces")
+
+    def test_raises_error_if_no_h1(self):
+        """Tests that a ValueError is raised when no H1 exists at all."""
+        markdown = "This is a document with no title."
+        with self.assertRaises(ValueError):
+            extract_title(markdown)
+
+    def test_raises_error_with_other_headings(self):
+        """Tests that a ValueError is raised if only H2, H3, etc. exist."""
+        markdown = """
+                    ## This is not a title
+
+                    ### This is also not a title
+
+                    A paragraph.
+                    """
+        with self.assertRaises(ValueError):
+            extract_title(markdown)
+
+    def test_ignores_non_heading_hash(self):
+        """Tests that a line starting with # but no space is not a title."""
+        markdown = "#NotATitle\nSome text here."
+        with self.assertRaises(ValueError):
+            extract_title(markdown)

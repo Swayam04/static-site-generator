@@ -9,7 +9,7 @@ class BlockType(Enum):
     unordered_list = r"^[-*]\s+"
     ordered_list = r"^\d+\.\s+"
 
-def _all_lines_match(lines: list[str], pattern: str) -> bool:
+def all_lines_match(lines: list[str], pattern: str) -> bool:
     return all(re.match(pattern, line) for line in lines)
 
 def block_to_blocktype(block: str) -> BlockType:
@@ -39,12 +39,12 @@ def check_code_block(lines: list[str]) -> BlockType:
     return BlockType.paragraph
 
 def check_quote_block(lines: list[str]) -> BlockType:
-    return BlockType.quote if _all_lines_match(lines, BlockType.quote.value) else BlockType.paragraph
+    return BlockType.quote if all_lines_match(lines, BlockType.quote.value) else BlockType.paragraph
 
 def check_unordered_list_block(lines: list[str]) -> BlockType:
-    return BlockType.unordered_list if _all_lines_match(lines, BlockType.unordered_list.value) else BlockType.paragraph
+    return BlockType.unordered_list if all_lines_match(lines, BlockType.unordered_list.value) else BlockType.paragraph
 
 def check_ordered_list_block(lines: list[str]) -> BlockType:
-    return BlockType.ordered_list if _all_lines_match(lines, BlockType.ordered_list.value) else BlockType.paragraph
+    return BlockType.ordered_list if all_lines_match(lines, BlockType.ordered_list.value) else BlockType.paragraph
 
     

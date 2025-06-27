@@ -44,27 +44,3 @@ class HTMLNode:
         if not self.tag:
             return ""
         return f"</{self.tag}>"
-
-    def __to_string(self, indent_level: int = 0) -> str:
-        indent = '   ' * indent_level
-        inner_indent = '   ' * (indent_level + 1)
-
-        props_html = self.props_to_html()
-        lines = []
-
-        if self.tag:
-            lines.append(f"{indent}<{self.tag}{props_html}>")
-        else:
-            if self.value is not None:
-                lines.append(f"{indent}{self.value}")
-
-        if self.tag and self.value is not None:
-            lines.append(f"{inner_indent}{self.value}")
-
-        for child in self.children:
-            lines.append(child.__to_string(indent_level + 1))
-
-        if self.tag:
-            lines.append(f"{indent}</{self.tag}>")
-
-        return "\n".join(lines)

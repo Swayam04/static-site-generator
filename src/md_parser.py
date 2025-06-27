@@ -102,10 +102,12 @@ def split_link_types(old_nodes: List[TextNode], link_type: TextType) -> List[Tex
     
     return new_nodes
 
-def extract_markdown_images(text : str) -> List[Tuple[str, str]]:
-    matches = re.findall(pattern_map[TextType.IMAGE], text)
-    return matches
+def extract_title(markdown : str) -> str:
+    md_blocks = markdown_to_blocks(markdown)
+    h1_pattern = r"^#\s+"
 
-def extract_markdown_links(text : str) -> List[Tuple[str, str]]:
-    matches = re.findall(pattern_map[TextType.LINK], text)
-    return matches
+    for block in md_blocks:
+        if re.match(h1_pattern, block):
+            return re.sub(h1_pattern, "", block).strip()
+    raise ValueError("No title found in markdown. A title is mandatory.")
+
